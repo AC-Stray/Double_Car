@@ -24,7 +24,7 @@ screen = pygame.display.set_mode((600, 400))
 screen.fill((255, 255, 255))
 black = (0, 0, 0)
 white = (255, 255, 255)
-pygame.display.set_caption("Double Car by AbsoCube")
+pygame.display.set_caption("Double Car by AbsoCube --version 1.1")
 icon = pygame.image.load("racing_flag.ico")
 pygame.display.set_icon(icon)
 car1 = pygame.image.load("Red.png")
@@ -93,8 +93,9 @@ def random_roadblock():
 
 
 def initialization():
-    global stop, RT1, RT2, point, roadblocks, score
+    global stop, over, RT1, RT2, point, roadblocks, score
     stop = False
+    over = False
     RT1 = 1
     RT2 = 3
     point = time.time()
