@@ -15,7 +15,8 @@ print(kdc)
 
 # read MaxScore file
 with open("MaxScore.dc", "r") as maxfile:
-    maxscore = maxfile.read(1)
+    maxscore = maxfile.readlines()
+    maxscore = maxscore[0]
 
 # ready
 pygame.init()
@@ -24,7 +25,7 @@ screen = pygame.display.set_mode((600, 400))
 screen.fill((255, 255, 255))
 black = (0, 0, 0)
 white = (255, 255, 255)
-pygame.display.set_caption("Double Car by AbsoCube --version 1.1")
+pygame.display.set_caption("Double Car by AbsoCube --version 1.2")
 icon = pygame.image.load("racing_flag.ico")
 pygame.display.set_icon(icon)
 car1 = pygame.image.load("Red.png")
@@ -52,7 +53,9 @@ t2rect.centery = 200
 start = button(50, 270, 500, 35, "Play", bfont, (255, 0, 0), white)
 back = button(50, 270, 500, 35, "Back", bfont, (0, 255, 0), white)
 RT1 = 1
+RT1pos = 75
 RT2 = 3
+RT2pos = 225
 point = time.time()
 score = 0
 roadblocks = []
@@ -60,10 +63,9 @@ stop = True
 over = False
 
 
-def blitcar(car, rt):
+def blitcar(car, rtp):
     rect = car.get_rect()
-    pos = rt*150-75
-    rect.centerx = pos
+    rect.centerx = rtp
     rect.centery = 320
     screen.blit(car, rect)
 
@@ -123,15 +125,15 @@ while True:
     keys = pygame.key.get_pressed()
     if keys[K_ESCAPE]:
         sys.exit()
-    elif keys[K_a]:
+    if keys[K_a]:
         RT1 = 1
     elif keys[K_d]:
         RT1 = 2
-    elif keys[K_LEFT]:
+    if keys[K_LEFT]:
         RT2 = 3
     elif keys[K_RIGHT]:
         RT2 = 4
-    elif keys[K_r]:
+    if keys[K_r]:
         initialization()
 
     # show background
@@ -146,8 +148,16 @@ while True:
     elif not stop and not over:
         # main game logic
         # show car(player)
-        blitcar(car1, RT1)
-        blitcar(car2, RT2)
+        if RT1*150-75 > RT1pos:
+            RT1pos += 5
+        elif RT1*150-75 < RT1pos:
+            RT1pos -= 5
+        if RT2*150-75 > RT2pos:
+            RT2pos += 5
+        elif RT2*150-75 < RT2pos:
+            RT2pos -= 5
+        blitcar(car1, RT1pos)
+        blitcar(car2, RT2pos)
 
         # create roadblock
         if time.time()-point >= 0.8:
