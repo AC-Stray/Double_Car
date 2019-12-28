@@ -13,6 +13,10 @@ Key description:
 '''
 print(kdc)
 
+# read MaxScore file
+with open("MaxScore.dc", "r") as maxfile:
+    maxscore = maxfile.read(1)
+
 # ready
 pygame.init()
 
@@ -25,15 +29,17 @@ icon = pygame.image.load("racing_flag.ico")
 pygame.display.set_icon(icon)
 car1 = pygame.image.load("Red.png")
 car2 = pygame.image.load("Yellow.png")
+AC = pygame.image.load("AbsoCube.jpg")
 bg = pygame.image.load("Racetrack.png")
 bg = pygame.transform.smoothscale(bg, (600, 400))
 rb = pygame.image.load("RB.png")
 rb = pygame.transform.smoothscale(rb, (50, 50))
 bb = pygame.image.load("BB.png")
 bb = pygame.transform.smoothscale(bb, (50, 50))
-tfont1 = pygame.font.Font("msyh.ttc", 70)
+tfont1 = pygame.font.Font("msyh.ttc", 80)
 tfont2 = pygame.font.Font("msyh.ttc", 50)
 bfont = pygame.font.Font("msyh.ttc", 25)
+sfont = pygame.font.Font("msyh.ttc", 60)
 srect = screen.get_rect()
 title1 = tfont1.render('Double Car', True, black)
 t1rect = title1.get_rect()
@@ -44,9 +50,11 @@ t2rect = title2.get_rect()
 t2rect.centerx = srect.centerx
 t2rect.centery = 200
 start = button(50, 270, 500, 35, "Play", bfont, (255, 0, 0), white)
+back = button(50, 270, 500, 35, "Back", bfont, (0, 255, 0), white)
 RT1 = 1
 RT2 = 3
 point = time.time()
+score = 0
 roadblocks = []
 stop = True
 over = False
@@ -66,9 +74,9 @@ def random_roadblock():
     blue = random.randint(0, 2)
     colors = [[rb, red], [bb, blue]]
     totalpos = []
-    for color in colors:
+    for rbcolor in colors:
         oldposes = []
-        for i in range(1, color[1]+1):
+        for i in range(1, rbcolor[1]+1):
             while True:
                 conflag = False
                 pos = random.randint(1, 4)
@@ -78,20 +86,27 @@ def random_roadblock():
                             conflag = True
                     if conflag:
                         continue
-                    roadblocks.append({'color': color[0], 'dis': 0, 'rt': pos})
+                    roadblocks.append({'color': rbcolor[0], 'dis': 0, 'rt': pos})
                     oldposes.append(pos)
                     totalpos.append(pos)
                     break
 
 
 def initialization():
-    global stop, RT1, RT2, point, roadblocks
+    global stop, RT1, RT2, point, roadblocks, score
     stop = False
     RT1 = 1
     RT2 = 3
     point = time.time()
     roadblocks = []
+    score = 0
             
+
+# show LOGO
+screen.fill((255, 255, 255))
+screen.blit(AC, (172, 72))
+pygame.display.update()
+time.sleep(3)
 
 # main programme begin
 while True:
@@ -101,6 +116,9 @@ while True:
             sys.exit()
         elif start.pressed(event) and stop:
             initialization()
+        elif back.pressed(event) and over:
+            over = False
+            stop = True
     keys = pygame.key.get_pressed()
     if keys[K_ESCAPE]:
         sys.exit()
@@ -125,6 +143,7 @@ while True:
         start.show(screen)
 
     elif not stop and not over:
+        # main game logic
         # show car(player)
         blitcar(car1, RT1)
         blitcar(car2, RT2)
@@ -143,24 +162,54 @@ while True:
             roadblock['dis'] += 1.5
 
         # hit?
-        ord = -1
+        o = -1
         for roadblock in roadblocks:
-            ord += 1
+            o += 1
             crect = car1.get_rect()
             if 320+crect.height//2+25 >= roadblock['dis'] >= 320-crect.height//2+25:
                 # hit red roadblock
                 if roadblock['color'] == rb and roadblock['rt'] in [RT1, RT2]:
-                    stop = True
+                    over = True
             # miss & get blue roadblock
             if roadblock['color'] == bb:
                 if roadblock['rt'] not in [RT1, RT2] and 320+crect.height//2 <= roadblock['dis']:
-                    stop = True
+                    over = True
                 elif 320+crect.height//2-25 >= roadblock['dis'] >= 320-crect.height//2+25:
                     if roadblock['rt'] in [RT1, RT2]:
-                        del roadblocks[ord]
-                        ord -= 1
+                        del roadblocks[o]
+                        o -= 1
+                        score += 1
             # touch edge & get roadblock
             if roadblock['dis'] >= 450:
-                del roadblocks[ord]
-                ord -= 1
+                del roadblocks[o]
+                o -= 1
+
+        # show score
+        scoretext = tfont2.render(str(score), True, black)
+        scorerect = scoretext.get_rect()
+        scorerect.top = srect.top
+        scorerect.centerx = srect.centerx
+        screen.blit(scoretext, scorerect)
+
+    elif over:
+        # screen when game is over
+        overtitle = sfont.render('You got '+str(score)+' scores!', True, black)
+        otrect = overtitle.get_rect()
+        otrect.centery = 100
+        otrect.centerx = srect.centerx
+        screen.blit(overtitle, otrect)
+        # update max score
+        with open("MaxScore.dc", "w") as maxfile:
+            if score > int(maxscore):
+                maxfile.write(str(score))
+                maxscore = str(score)
+            else:
+                maxfile.write(maxscore)
+        maxtext = tfont2.render('max: '+maxscore, True, black)
+        mtrect = maxtext.get_rect()
+        mtrect.centerx = srect.centerx
+        mtrect.top = otrect.bottom
+        screen.blit(maxtext, mtrect)
+        back.show(screen)
+
     pygame.display.update()
