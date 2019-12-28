@@ -25,7 +25,7 @@ screen = pygame.display.set_mode((600, 400))
 screen.fill((255, 255, 255))
 black = (0, 0, 0)
 white = (255, 255, 255)
-pygame.display.set_caption("Double Car by AbsoCube --version 1.2")
+pygame.display.set_caption("Double Car by AbsoCube --version 1.3")
 icon = pygame.image.load("racing_flag.ico")
 pygame.display.set_icon(icon)
 car1 = pygame.image.load("Red.png")
@@ -37,6 +37,9 @@ rb = pygame.image.load("RB.png")
 rb = pygame.transform.smoothscale(rb, (50, 50))
 bb = pygame.image.load("BB.png")
 bb = pygame.transform.smoothscale(bb, (50, 50))
+BGM = 'Adventure.mp3'
+pop = 'Pop.mp3'
+pygame.mixer.init(frequency=44100)
 tfont1 = pygame.font.Font("msyh.ttc", 80)
 tfont2 = pygame.font.Font("msyh.ttc", 50)
 bfont = pygame.font.Font("msyh.ttc", 25)
@@ -59,8 +62,11 @@ RT2pos = 225
 point = time.time()
 score = 0
 roadblocks = []
+effect = None
 stop = True
 over = False
+old = False
+epoint = time.time()
 
 
 def blitcar(car, rtp):
@@ -95,9 +101,12 @@ def random_roadblock():
 
 
 def initialization():
-    global stop, over, RT1, RT2, point, roadblocks, score
+    global stop, over, RT1, RT2, point, roadblocks, score, old, effect
+    pygame.mixer.music.stop()
     stop = False
     over = False
+    old = True
+    effect = None
     RT1 = 1
     RT2 = 3
     point = time.time()
@@ -122,17 +131,19 @@ while True:
         elif back.pressed(event) and over:
             over = False
             stop = True
+            old = False
     keys = pygame.key.get_pressed()
     if keys[K_ESCAPE]:
         sys.exit()
-    if keys[K_a]:
-        RT1 = 1
-    elif keys[K_d]:
-        RT1 = 2
-    if keys[K_LEFT]:
-        RT2 = 3
-    elif keys[K_RIGHT]:
-        RT2 = 4
+    if not effect:
+        if keys[K_a]:
+            RT1 = 1
+        elif keys[K_d]:
+            RT1 = 2
+        if keys[K_LEFT]:
+            RT2 = 3
+        elif keys[K_RIGHT]:
+            RT2 = 4
     if keys[K_r]:
         initialization()
 
@@ -144,10 +155,15 @@ while True:
         screen.blit(title1, t1rect)
         screen.blit(title2, t2rect)
         start.show(screen)
+        if not old:
+            # game BGM
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load(BGM)
+            pygame.mixer.music.play()
+            old = True
 
-    elif not stop and not over:
+    elif not stop and not over and not effect:
         # main game logic
-        # show car(player)
         if RT1*150-75 > RT1pos:
             RT1pos += 5
         elif RT1*150-75 < RT1pos:
@@ -156,6 +172,8 @@ while True:
             RT2pos += 5
         elif RT2*150-75 < RT2pos:
             RT2pos -= 5
+
+        # show car(player)
         blitcar(car1, RT1pos)
         blitcar(car2, RT2pos)
 
@@ -180,16 +198,25 @@ while True:
             if 320+crect.height//2+25 >= roadblock['dis'] >= 320-crect.height//2+25:
                 # hit red roadblock
                 if roadblock['color'] == rb and roadblock['rt'] in [RT1, RT2]:
-                    over = True
+                    effect = roadblocks[o]
+                    epoint = time.time()
+                    del roadblocks[o]
+                    o -= 1
             # miss & get blue roadblock
             if roadblock['color'] == bb:
                 if roadblock['rt'] not in [RT1, RT2] and 320+crect.height//2 <= roadblock['dis']:
-                    over = True
+                    effect = roadblocks[o]
+                    epoint = time.time()
+                    del roadblocks[o]
+                    o -= 1
                 elif 320+crect.height//2-25 >= roadblock['dis'] >= 320-crect.height//2+25:
                     if roadblock['rt'] in [RT1, RT2]:
                         del roadblocks[o]
                         o -= 1
                         score += 1
+                        # sound effect
+                        pygame.mixer.music.load(pop)
+                        pygame.mixer.music.play()
             # touch edge & get roadblock
             if roadblock['dis'] >= 450:
                 del roadblocks[o]
@@ -201,6 +228,24 @@ while True:
         scorerect.top = srect.top
         scorerect.centerx = srect.centerx
         screen.blit(scoretext, scorerect)
+
+    elif effect:
+        # death effect
+        blitcar(car1, RT1pos)
+        blitcar(car2, RT2pos)
+        for roadblock in roadblocks:
+            brect = roadblock['color'].get_rect()
+            brect.bottom = int(roadblock['dis'])
+            brect.centerx = roadblock['rt'] * 150 - 75
+            screen.blit(roadblock['color'], brect)
+        if (time.time()-epoint)//0.3 % 2 == 1:
+            brect = effect['color'].get_rect()
+            brect.bottom = int(effect['dis'])
+            brect.centerx = effect['rt'] * 150 - 75
+            screen.blit(effect['color'], brect)
+        if time.time()-epoint >= 3:
+            over = True
+            effect = None
 
     elif over:
         # screen when game is over
