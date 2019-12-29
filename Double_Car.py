@@ -25,7 +25,7 @@ screen = pygame.display.set_mode((600, 400))
 screen.fill((255, 255, 255))
 black = (0, 0, 0)
 white = (255, 255, 255)
-pygame.display.set_caption("Double Car by AbsoCube --version 1.3")
+pygame.display.set_caption("Double Car by AbsoCube --version 1.4")
 icon = pygame.image.load("racing_flag.ico")
 pygame.display.set_icon(icon)
 car1 = pygame.image.load("Red.png")
@@ -164,6 +164,7 @@ while True:
 
     elif not stop and not over and not effect:
         # main game logic
+        # move car(player)
         if RT1*150-75 > RT1pos:
             RT1pos += 5
         elif RT1*150-75 < RT1pos:
@@ -217,7 +218,7 @@ while True:
                         # sound effect
                         pygame.mixer.music.load(pop)
                         pygame.mixer.music.play()
-            # touch edge & get roadblock
+            # touch edge
             if roadblock['dis'] >= 450:
                 del roadblocks[o]
                 o -= 1
