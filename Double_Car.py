@@ -6,7 +6,7 @@ from Class_Button import button
 kdc = '''
 Key description:
     press key A to move the red car to racetrack 1
-    press key R to move the red car to racetrack 2
+    press key D to move the red car to racetrack 2
     press key < to move the yellow car to racetrack 3
     press key > to move the yellow car to racetrack 4
     press key R to initialization the game (replay / start the game)
@@ -25,7 +25,7 @@ screen = pygame.display.set_mode((600, 400))
 screen.fill((255, 255, 255))
 black = (0, 0, 0)
 white = (255, 255, 255)
-pygame.display.set_caption("Double Car by AbsoCube --version 1.4")
+pygame.display.set_caption("Double Car by AbsoCube --version 1.5")
 icon = pygame.image.load("racing_flag.ico")
 pygame.display.set_icon(icon)
 car1 = pygame.image.load("Red.png")
